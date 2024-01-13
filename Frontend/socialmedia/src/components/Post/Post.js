@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import Card from "@mui/material/Card";
@@ -11,6 +11,9 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CommentIcon from "@mui/icons-material/Comment";
+import { Container } from "@mui/material";
+import Comment from "../Comment/Comment.js";
+import CommentForm from "../Comment/CommentForm.js";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -24,17 +27,45 @@ const ExpandMore = styled((props) => {
 }));
 
 function Post(props) {
-  const { userId, userName, title, text } = props;
+  const { userId, userName, title, text, postId } = props;
   const [expanded, setExpanded] = useState(false);
   const [likeColor, setLikeColor] = useState(false);
+  const [commentList, setCommentList] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const isInitialMount = useRef(true);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
+    refreshComments();
   };
 
   const handleChangeLikeColor = () => {
     setLikeColor(!likeColor);
   };
+
+  const refreshComments = () => {
+    fetch(process.env.REACT_APP_BACKEND_URL + "/comments?postId=" + postId)
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          setIsLoaded(true);
+          setCommentList(result);
+        },
+        (error) => {
+          setIsLoaded(true);
+          setError(error);
+        }
+      );
+  };
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      refreshComments();
+    }
+  }, []);
 
   return (
     <div className="postContainer">
@@ -78,7 +109,21 @@ function Post(props) {
           </ExpandMore>
         </CardActions>
         <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <CardContent></CardContent>
+          <Container fixed>
+            {error
+              ? "error"
+              : isLoaded
+              ? commentList.map((comment, key) => (
+                  <Comment
+                    key={key}
+                    userId={1}
+                    userName={"USER"}
+                    text={comment.text}
+                  ></Comment>
+                ))
+              : "Loading"}
+            <CommentForm userId={1} userName={"USER"} postId={postId} />
+          </Container>
         </Collapse>
       </Card>
     </div>
