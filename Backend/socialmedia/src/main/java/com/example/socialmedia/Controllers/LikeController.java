@@ -1,6 +1,7 @@
 package com.example.socialmedia.Controllers;
 
 import com.example.socialmedia.DTOs.request.LikeRequest;
+import com.example.socialmedia.DTOs.response.LikeResponse;
 import com.example.socialmedia.Entities.Like;
 import com.example.socialmedia.Services.LikeService;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class LikeController {
     }
 
     @GetMapping
-    public List<Like> getAllLikes(@RequestParam Optional<Long> userId, @RequestParam Optional<Long> postId) {
+    public List<LikeResponse> getAllLikes(@RequestParam Optional<Long> userId, @RequestParam Optional<Long> postId) {
         return likeService.getAllLikes(userId, postId);
     }
 
