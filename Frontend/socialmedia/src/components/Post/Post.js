@@ -27,12 +27,14 @@ const ExpandMore = styled((props) => {
 }));
 
 function Post(props) {
-  const { userId, userName, title, text, postId } = props;
+  const { userId, userName, title, text, postId, likes } = props;
   const [expanded, setExpanded] = useState(false);
-  const [likeColor, setLikeColor] = useState(false);
   const [commentList, setCommentList] = useState([]);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(likes.length);
+  const [likeId, setLikeId] = useState(null);
   const isInitialMount = useRef(true);
 
   const handleExpandClick = () => {
@@ -40,8 +42,39 @@ function Post(props) {
     refreshComments();
   };
 
-  const handleChangeLikeColor = () => {
-    setLikeColor(!likeColor);
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    if (!isLiked) {
+      saveLike();
+      setLikeCount(likeCount + 1);
+    } else {
+      deleteLike();
+      setLikeCount(likeCount - 1);
+    }
+  };
+
+  const saveLike = () => {
+    fetch(process.env.REACT_APP_BACKEND_URL + "/likes", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: userId,
+        postId: postId,
+      }),
+      headers: {
+        "Content-type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .catch((err) => console.log(err));
+  };
+
+  const deleteLike = () => {
+    fetch(process.env.REACT_APP_BACKEND_URL + "/likes/" + likeId, {
+      method: "DELETE",
+      headers: {
+        "Content-type": "application/json",
+      },
+    }).catch((err) => console.log(err)); //Herhangi bir response almayacağımız için (delete işleminden dolayı) then işlemine gerek yoktur
   };
 
   const refreshComments = () => {
@@ -59,12 +92,24 @@ function Post(props) {
       );
   };
 
+  const checkLikes = () => {
+    var likeControl = likes.find((like) => like.userId === userId);
+    if (likeControl != null) {
+      setLikeId(likeControl.id);
+      setIsLiked(true);
+    }
+  };
+
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
     } else {
       refreshComments();
     }
+  }, []);
+
+  useEffect(() => {
+    checkLikes();
   }, []);
 
   return (
@@ -93,12 +138,10 @@ function Post(props) {
           </Typography>
         </CardContent>
         <CardActions disableSpacing>
-          <IconButton
-            onClick={handleChangeLikeColor}
-            aria-label="add to favorites"
-          >
-            <FavoriteIcon style={likeColor ? { color: "red" } : null} />
+          <IconButton onClick={handleLike} aria-label="add to favorites">
+            <FavoriteIcon style={isLiked ? { color: "red" } : null} />
           </IconButton>
+          {likeCount}
           <ExpandMore
             expand={expanded}
             onClick={handleExpandClick}
