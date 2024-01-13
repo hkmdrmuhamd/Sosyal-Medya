@@ -1,31 +1,31 @@
 import { React, useState, useEffect } from "react";
-import axios from "axios";
 import Post from "../Post/Post";
 import CssBaseline from "@mui/material/CssBaseline";
-import Container from "@mui/material/Container";
 import "./Home.css";
+import PostForm from "../Post/PostForm";
 
 function Home() {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [postList, setPostList] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await axios(
-          process.env.REACT_APP_BACKEND_URL + "/posts"
-        );
-        setIsLoaded(true);
-        setPostList(result.data);
-      } catch (error) {
-        console.log(error);
-        setIsLoaded(true);
-        setError(error);
-      }
-    };
+  const refreshPosts = () => {
+    fetch(process.env.REACT_APP_BACKEND_URL + "/posts")
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          setIsLoaded(true);
+          setPostList(result);
+        },
+        (error) => {
+          setIsLoaded(true);
+          setError(error);
+        }
+      );
+  };
 
-    fetchData();
+  useEffect(() => {
+    refreshPosts();
   }, []);
 
   if (error) {
@@ -36,17 +36,21 @@ function Home() {
     return (
       <div>
         <CssBaseline />
-        <Container
+        <div
           fixed
           style={{
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "#cfe8fc",
-            height: "100vh",
+            backgroundColor: "#f0f5ff",
           }}
         >
+          <PostForm
+            userId={1}
+            userName={"asdasd"}
+            refreshPosts={refreshPosts}
+          />
           {postList.map((post, key) => (
             <Post
               key={post.id}
@@ -56,7 +60,7 @@ function Home() {
               text={post.text}
             ></Post>
           ))}
-        </Container>
+        </div>
       </div>
     );
   }
