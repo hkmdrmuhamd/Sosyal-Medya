@@ -1,7 +1,8 @@
 package com.example.socialmedia.Entities;
 
-import jakarta.persistence.*;
 import lombok.Data;
+
+import javax.persistence.*;
 
 @Entity
 @Table(name="user")
